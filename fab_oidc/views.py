@@ -14,7 +14,8 @@ LAST_NAME_OIDC_FIELD = os.getenv('LAST_NAME_OIDC_FIELD',
                                  default='family_name')
 
 def get_airflow_roles(k_roles):
-  if not
+  if k_roles is None:
+    return 'User'
   if 'CloudEng' in k_roles:
     return 'Admin'
   if 'op' in k_roles:
