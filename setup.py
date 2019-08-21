@@ -32,7 +32,7 @@ setup(
     platforms='any',
     install_requires=[
         'Flask-AppBuilder>=1.5.0',
-        'Flask-OIDC @ https://github.com/puiterwijk/flask-oidc.git',
+        'Flask-OIDC@https://github.com/puiterwijk/flask-oidc.git#egg=Flask-OIDC',
         'Flask-Admin>=1.4.1'
     ],
     tests_require=[
