@@ -32,10 +32,9 @@ class AuthOIDCView(AuthOIDView):
 
         sm = self.appbuilder.sm
         oidc = sm.oid
-        log.info(oidc)
         @self.appbuilder.sm.oid.require_login
         def handle_login():
-            log.info(oidc)
+            log.info(oidc.access_token)
             user = sm.auth_user_oid(oidc.user_getfield('email'))
             if user is None:
                 tinfo =oidc.user_getinfo([USERNAME_OIDC_FIELD, FIRST_NAME_OIDC_FIELD, LAST_NAME_OIDC_FIELD, 'email', 'department'])
