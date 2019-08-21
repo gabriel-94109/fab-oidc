@@ -1,18 +1,26 @@
 import os
-from flask import redirect, request
+from flask import redirect, request, current_app
 from flask_appbuilder.security.views import AuthOIDView
 from flask_login import login_user
 from flask_admin import expose
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 
 # Set the OIDC field that should be used as a username
 USERNAME_OIDC_FIELD = os.getenv('USERNAME_OIDC_FIELD', default='sub')
 FIRST_NAME_OIDC_FIELD = os.getenv('FIRST_NAME_OIDC_FIELD',
-                                  default='nickname')
+                                  default='given_name')
 LAST_NAME_OIDC_FIELD = os.getenv('LAST_NAME_OIDC_FIELD',
-                                 default='name')
+                                 default='family_name')
 
+def get_airflow_roles(k_roles):
+  if not
+  if 'CloudEng' in k_roles:
+    return 'Admin'
+  if 'op' in k_roles:
+    return 'Op'
+  else:
+    return 'User'
 
 class AuthOIDCView(AuthOIDView):
 
@@ -25,18 +33,14 @@ class AuthOIDCView(AuthOIDView):
         @self.appbuilder.sm.oid.require_login
         def handle_login():
             user = sm.auth_user_oid(oidc.user_getfield('email'))
-
             if user is None:
-                info = oidc.user_getinfo(
-                    [USERNAME_OIDC_FIELD, 'name', 'email', 'nickname']
-                )
-
+                tinfo =oidc.user_getinfo([USERNAME_OIDC_FIELD, FIRST_NAME_OIDC_FIELD, LAST_NAME_OIDC_FIELD, 'email', 'department'])
                 user = sm.add_user(
-                    username=info.get(USERNAME_OIDC_FIELD),
-                    first_name=info.get(FIRST_NAME_OIDC_FIELD),
-                    last_name=info.get(LAST_NAME_OIDC_FIELD),
-                    email=info.get('email'),
-                    role=sm.find_role(sm.auth_user_registration_role)
+                    username=tinfo.get(USERNAME_OIDC_FIELD),
+                    first_name=tinfo.get(FIRST_NAME_OIDC_FIELD),
+                    last_name=tinfo.get(LAST_NAME_OIDC_FIELD),
+                    email=tinfo.get('email'),
+                    role=sm.find_role(get_airflow_roles(tinfo.get('department')))
                 )
 
             login_user(user, remember=False)
@@ -51,8 +55,13 @@ class AuthOIDCView(AuthOIDView):
 
         oidc.logout()
         super(AuthOIDCView, self).logout()
-        redirect_url = request.url_root.strip(
-            '/') + self.appbuilder.get_url_for_login
+
+        redirect_uri = current_app.config['OVERWRITE_REDIRECT_URI']
+        if redirect_uri:
+            parsed_uri = urlparse(redirect_uri)
+            redirect_url = parsed_uri.scheme + "://" + parsed_uri.hostname + self.appbuilder.get_url_for_login
+        else:
+            redirect_url = request.url_root.strip('/') + self.appbuilder.get_url_for_login
 
         logout_uri = oidc.client_secrets.get(
             'issuer') + '/protocol/openid-connect/logout?redirect_uri='
