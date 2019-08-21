@@ -4,6 +4,8 @@ from flask_appbuilder.security.views import AuthOIDView
 from flask_login import login_user
 from flask_admin import expose
 from urllib.parse import quote, urlparse
+from logging import getLogger
+log = getLogger(__name__)
 
 
 # Set the OIDC field that should be used as a username
@@ -36,6 +38,7 @@ class AuthOIDCView(AuthOIDView):
             user = sm.auth_user_oid(oidc.user_getfield('email'))
             if user is None:
                 tinfo =oidc.user_getinfo([USERNAME_OIDC_FIELD, FIRST_NAME_OIDC_FIELD, LAST_NAME_OIDC_FIELD, 'email', 'department'])
+                log.info(tinfo)
                 user = sm.add_user(
                     username=tinfo.get(USERNAME_OIDC_FIELD),
                     first_name=tinfo.get(FIRST_NAME_OIDC_FIELD),
